@@ -1,0 +1,60 @@
+version: "3"
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9000:9090"
+    volumes:
+      - prometheus-config:/etc/prometheus
+      - prometheus-data:/prometheus
+
+  postgres:
+    image: postgres:11.14-alpine
+    container_name: template-pg
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: always
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: 'trust'
+
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - postgres
+    ports:
+      - "5555:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: jeet.patel@tntra.io
+      PGADMIN_DEFAULT_PASSWORD: Start!23
+    restart: always
+
+  mongo:
+    container_name: mongo
+    image: mongo
+    ports:
+      - "27017:27017"
+
+  redis:
+    depends_on:
+      - mongo
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--bind", "redis", "--port", "6379"]
+
+volumes:
+  pg_data:
+  prometheus-config:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/prometheus
+      o: bind
+  prometheus-data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/prometheus/data
+      o: bind
